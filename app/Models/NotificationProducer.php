@@ -32,7 +32,9 @@ class NotificationProducer
         $this->topic->produce(RD_KAFKA_PARTITION_UA, 0, "Messassge $i");
 
         echo $i;
-        $this->producer->poll(0);
+       // $this->producer->flush(10000);
+        sleep(10);
+
 
 
     }

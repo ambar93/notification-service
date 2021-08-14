@@ -6,40 +6,31 @@ use \Rdkafka;
 
 class NotificationConsumer
 {
-    protected $topic;
+    protected $consumer;
     public function __construct()
     {
         $conf = new RdKafka\Conf();
         $conf->set('group.id', 'myConsumerGroup');
+        $conf->set('metadata.broker.list', '127.0.0.1');
+        $conf->set('auto.offset.reset', 'earliest');
 
-        $rk = new RdKafka\Consumer($conf);
-        $rk->addBrokers("127.0.0.1");
 
-        $topicConf = new RdKafka\TopicConf();
-
-        $topicConf->set('auto.commit.interval.ms', 100);
-// Set the offset store method to 'file'
-        $topicConf->set('offset.store.method', 'broker');
-        $topicConf->set('enable.auto.commit', true);
-
-        $topicConf->set('auto.offset.reset', 'earliest');
-
-        $this->topic = $rk->newTopic("test", $topicConf);
-        $this->topic->consumeStart(0, RD_KAFKA_OFFSET_STORED);
+        $this->consumer = new RdKafka\KafkaConsumer($conf);
+        $this->consumer->subscribe(['test']);
 
     }
 
     public function consume()
     {
         while (true) {
-            $message = $this->topic->consume(0, 120*10000);
+            echo "Waiting for partition assignment... (make take some time when\n";
+            echo "quickly re-joining the group after leaving it.)\n";
+            $message = $this->consumer->consume( 12*10000);
             switch ($message->err) {
                 case RD_KAFKA_RESP_ERR_NO_ERROR:
                     {
                         var_dump("MESSAGE CONSUMED");
                         var_dump($message);
-
-
                     }
                     break;
                 case RD_KAFKA_RESP_ERR__PARTITION_EOF:
